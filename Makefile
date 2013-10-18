@@ -5,3 +5,9 @@ test:
 	@mysql -u root -e "CREATE DATABASE IF NOT EXISTS kvstore_mysql_example"
 	@go test -race -i
 	@go test -race -v
+
+lint:
+	@golint `find . -name "*.go"`
+
+fmt:
+	@go fmt ./...

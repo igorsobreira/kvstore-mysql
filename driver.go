@@ -12,7 +12,7 @@ import (
 	"fmt"
 	"io"
 
-	_ "github.com/go-sql-driver/mysql"
+	_ "github.com/go-sql-driver/mysql" // register mysql driver
 	"github.com/igorsobreira/kvstore"
 )
 
@@ -20,7 +20,7 @@ func init() {
 	kvstore.Register("mysql", &Driver{})
 }
 
-// Implements kvstore.Driver interface using a MySQL database
+// Driver implementes kvstore.Driver interface using MySQL
 type Driver struct {
 	db *sql.DB
 }
@@ -56,6 +56,7 @@ func (d *Driver) Open(info string) error {
 	return nil
 }
 
+// Set key associated to value. Override existing value.
 func (d *Driver) Set(key string, value []byte) error {
 	_, err := d.db.Exec(
 		"INSERT INTO kvstore (`key`, `key_md5`, `value`) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE `value` = ?",
@@ -64,6 +65,8 @@ func (d *Driver) Set(key string, value []byte) error {
 	return err
 }
 
+// Get value associated with key. Return kvstore.ErrNotFound if
+// key doesn't exist
 func (d *Driver) Get(key string) (value []byte, err error) {
 	err = d.db.QueryRow("SELECT `value` FROM kvstore WHERE `key`=?", key).Scan(&value)
 
@@ -77,6 +80,7 @@ func (d *Driver) Get(key string) (value []byte, err error) {
 	}
 }
 
+// Delete key. No-op if key not found.
 func (d *Driver) Delete(key string) (err error) {
 	_, err = d.db.Exec("DELETE FROM kvstore WHERE `key` = ?", key)
 	return err
