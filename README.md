@@ -9,3 +9,5 @@ Install:
 Run tests:
 
     make
+
+See [docs](http://godoc.org/github.com/igorsobreira/kvstore-mysql) for more details.
