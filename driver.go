@@ -1,4 +1,8 @@
-// Package kvstoremysql implements a MySQL driver for github.com/igorsobreira/kvstore
+// Package kvstoremysql implements a MySQL driver for github.com/igorsobreira/kvstore.
+//
+// Keys are stored in a VARCHAR(256) column and values in a MEDIUMBLOB.
+// The max size of a value is specified by MySQL config max_long_data_size and
+// max_allowed_packet on version 5.6
 package kvstoremysql
 
 import (
