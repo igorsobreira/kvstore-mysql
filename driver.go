@@ -20,8 +20,11 @@ func init() {
 	kvstore.Register("mysql", &Driver{})
 }
 
-// Driver implementes kvstore.Driver interface using MySQL
-type Driver struct {
+// Driver implementes kvstore.Driver interface
+type Driver struct{}
+
+// Conn implements kvstore.Conn wrapping a MySQL connection
+type Conn struct {
 	db *sql.DB
 }
 
@@ -31,12 +34,12 @@ type Driver struct {
 // https://github.com/Go-SQL-Driver/MySQL/#dsn-data-source-name
 //
 // The database specified on info has to exist, the necessary tables
-// will be created automatically
-func (d *Driver) Open(info string) error {
+// will be created
+func (d *Driver) Open(info string) (kvstore.Conn, error) {
 
 	db, err := sql.Open("mysql", info)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// create a key_md5 as UNIQUE since key is too big to create the index,
@@ -49,16 +52,16 @@ func (d *Driver) Open(info string) error {
 		") ENGINE=InnoDB DEFAULT CHARSET=utf8")
 	if err != nil {
 		db.Close()
-		return errors.New("kvstore mysql: " + err.Error())
+		panic("MERDA! " + err.Error())
+		return nil, errors.New("kvstore mysql: " + err.Error())
 	}
 
-	d.db = db
-	return nil
+	return &Conn{db}, nil
 }
 
 // Set key associated to value. Override existing value.
-func (d *Driver) Set(key string, value []byte) error {
-	_, err := d.db.Exec(
+func (c *Conn) Set(key string, value []byte) error {
+	_, err := c.db.Exec(
 		"INSERT INTO kvstore (`key`, `key_md5`, `value`) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE `value` = ?",
 		key, md5of(key), value, value,
 	)
@@ -67,8 +70,8 @@ func (d *Driver) Set(key string, value []byte) error {
 
 // Get value associated with key. Return kvstore.ErrNotFound if
 // key doesn't exist
-func (d *Driver) Get(key string) (value []byte, err error) {
-	err = d.db.QueryRow("SELECT `value` FROM kvstore WHERE `key`=?", key).Scan(&value)
+func (c *Conn) Get(key string) (value []byte, err error) {
+	err = c.db.QueryRow("SELECT `value` FROM kvstore WHERE `key`=?", key).Scan(&value)
 
 	switch {
 	case err == sql.ErrNoRows:
@@ -81,9 +84,14 @@ func (d *Driver) Get(key string) (value []byte, err error) {
 }
 
 // Delete key. No-op if key not found.
-func (d *Driver) Delete(key string) (err error) {
-	_, err = d.db.Exec("DELETE FROM kvstore WHERE `key` = ?", key)
+func (c *Conn) Delete(key string) (err error) {
+	_, err = c.db.Exec("DELETE FROM kvstore WHERE `key` = ?", key)
 	return err
+}
+
+// Close will close the mysql connection.
+func (c *Conn) Close() error {
+	return c.db.Close()
 }
 
 func md5of(s string) string {

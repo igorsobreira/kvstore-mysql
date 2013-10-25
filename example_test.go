@@ -8,7 +8,7 @@ import (
 	_ "github.com/igorsobreira/kvstore-mysql"
 )
 
-const info = "root:@tcp(localhost:3306)/kvstore_mysql_example?timeout=1s"
+const info = "root:@tcp(localhost:3306)/kvstore_example?timeout=1s"
 
 func Example() {
 	defer Teardown()
