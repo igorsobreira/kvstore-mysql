@@ -1,4 +1,4 @@
-# MySQL driver for kvstore
+# MySQL driver for github.com/igorsobreira/kvstore
 
 Driver for [kvstore](https://github.com/igorsobreira/kvstore).
 
