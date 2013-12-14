@@ -52,7 +52,6 @@ func (d *Driver) Open(info string) (kvstore.Conn, error) {
 		") ENGINE=InnoDB DEFAULT CHARSET=utf8")
 	if err != nil {
 		db.Close()
-		panic("MERDA! " + err.Error())
 		return nil, errors.New("kvstore mysql: " + err.Error())
 	}
 
